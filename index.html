@@ -182,7 +182,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <h1>Power Regulator</h1>
-        <p>Project viewer (PDF + 3D)</p>
+        <p>Project viewer (PDF + 3D + iBOM)</p>
       </div>
 
       <nav class="nav" id="nav">
@@ -197,9 +197,15 @@
         <button data-type="glb" data-src="assets/models/pcbled_driver.glb" data-label="3D PCB Model">
           <span>3D Model</span><span class="hint">GLB</span>
         </button>
+
+        <!-- iBOM tab -->
+        <button data-type="html" data-src="assets/bom/visualBOM.html" data-label="Interactive BOM">
+          <span>BOM</span><span class="hint">iBOM</span>
+        </button>
       </nav>
 
       <div class="hint" style="margin-top:auto;">
+        Tip: add more items by copying a button and changing <code>data-src</code>.
       </div>
     </aside>
 
@@ -211,10 +217,14 @@
       </div>
 
       <div class="viewerWrap">
-        <!-- PDF -->
-        <iframe id="pdfViewer" src="assets/pdf/Board.pdf"></iframe>
+        <!-- PDF + HTML (BOM) -->
+        <iframe
+          id="docViewer"
+          src="assets/pdf/Board.pdf"
+          sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-popups">
+        </iframe>
 
-        <!-- 3D (no auto-rotate; performance-friendly settings) -->
+        <!-- 3D -->
         <model-viewer
           id="glbViewer"
           class="hidden"
@@ -225,8 +235,7 @@
           reveal="auto"
           shadow-intensity="0"
           environment-image="neutral"
-          exposure="1.05"
-          environment-image="https://modelviewer.dev/shared-assets/environments/studio_small_09_1k.hdr">
+          exposure="1">
         </model-viewer>
       </div>
     </main>
@@ -238,22 +247,22 @@
   <script>
     const nav = document.getElementById('nav');
 
-    const pdfViewer = document.getElementById('pdfViewer');
-    const glbViewer = document.getElementById('glbViewer');
+    const docViewer = document.getElementById('docViewer'); // PDFs + BOM
+    const glbViewer = document.getElementById('glbViewer'); // 3D
     const currentLabel = document.getElementById('currentLabel');
 
     const sidebar = document.getElementById('sidebar');
     const hamburger = document.getElementById('hamburger');
     const scrim = document.getElementById('scrim');
 
-    function showPDF(src){
+    function showDoc(src){
       glbViewer.classList.add('hidden');
-      pdfViewer.classList.remove('hidden');
-      pdfViewer.src = src;
+      docViewer.classList.remove('hidden');
+      docViewer.src = src;
     }
 
     function showGLB(src){
-      pdfViewer.classList.add('hidden');
+      docViewer.classList.add('hidden');
       glbViewer.classList.remove('hidden');
       glbViewer.src = src;
     }
@@ -271,7 +280,7 @@
       const src = btn.dataset.src;
 
       if (type === 'glb') showGLB(src);
-      else showPDF(src);
+      else showDoc(src); // pdf OR html (BOM)
 
       currentLabel.textContent = btn.dataset.label || 'Viewer';
 
