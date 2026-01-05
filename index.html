@@ -18,6 +18,7 @@
       --btn:#162232;
       --btnHover:#1c2b40;
       --accent:#58a6ff;
+      --card:#0b111a;
     }
 
     *{box-sizing:border-box}
@@ -51,16 +52,8 @@
       padding-bottom:12px;
       border-bottom:1px solid var(--line);
     }
-    .brand h1{
-      font-size:16px;
-      margin:0;
-      letter-spacing:0.2px;
-    }
-    .brand p{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-    }
+    .brand h1{ font-size:16px; margin:0; letter-spacing:0.2px; }
+    .brand p{ margin:0; font-size:12px; color:var(--muted); }
 
     .nav{
       display:flex;
@@ -147,8 +140,10 @@
       background: #0b0f14;
     }
 
-    /* Board images viewer */
-    .boardImages{
+    .hidden{ display:none !important; }
+
+    /* ===== Board 2x2 grid ===== */
+    .boardGrid{
       width:100%;
       height:100%;
       border:1px solid var(--line);
@@ -157,32 +152,91 @@
       padding:12px;
       display:grid;
       grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
       gap:12px;
       overflow:auto;
     }
-    .boardImages figure{
-      margin:0;
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: var(--card);
+      overflow:hidden;
+      min-width:0;
+      min-height:0;
       display:flex;
       flex-direction:column;
-      min-width:0;
-      gap:8px;
-    }
-    .boardImages figcaption{
-      font-size:12px;
-      color: var(--muted);
-      padding: 0 4px;
-    }
-    .boardImages img{
-      width:100%;
-      height:auto;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#111;
-      display:block;
-      object-fit:contain;
     }
 
-    .hidden{ display:none !important; }
+    .cardHeader{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .cardHeader .label{
+      font-size:12px;
+      color: var(--muted);
+      letter-spacing:0.2px;
+    }
+
+    .cardBody{
+      padding:10px;
+      flex:1;
+      min-height:0;
+    }
+
+    .cardBody img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      border-radius:10px;
+      background:#111;
+    }
+
+    /* Embedded model in quadrant */
+    #boardModel{
+      height:100%;
+      width:100%;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#0b0f14;
+    }
+
+    /* Download buttons quadrant */
+    .dlWrap{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      height:100%;
+      justify-content:center;
+    }
+    .dlButton{
+      width:100%;
+      border:1px solid var(--line);
+      background: var(--btn);
+      color: var(--text);
+      padding:12px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      text-align:left;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition: background 120ms ease;
+      font-size:14px;
+    }
+    .dlButton:hover{ background: var(--btnHover); }
+    .dlHint{
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.4;
+    }
 
     @media (max-width: 900px){
       .app{ grid-template-columns: 1fr; }
@@ -208,10 +262,12 @@
       .scrim.show{ display:block; }
       .viewerWrap{ padding:10px; }
 
-      /* stack images on mobile */
-      .boardImages{
+      /* On mobile: stack board quadrants vertically */
+      .boardGrid{
         grid-template-columns: 1fr;
+        grid-template-rows: auto;
       }
+      .card{ min-height: 260px; }
     }
   </style>
 </head>
@@ -222,13 +278,12 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <h1>Power Regulator</h1>
-        <p>Project viewer (Images + PDF + 3D + iBOM)</p>
+        <p>Project viewer (Board + PDF + 3D + iBOM)</p>
       </div>
 
       <nav class="nav" id="nav">
-        <!-- Board now shows 2 images -->
-        <button class="active" data-type="boardImages" data-label="Board Images">
-          <span>Board</span><span class="hint">IMG</span>
+        <button class="active" data-type="board" data-label="Board Overview">
+          <span>Board</span><span class="hint">4-up</span>
         </button>
 
         <button data-type="pdf" data-src="assets/pdf/Schematic.pdf" data-label="Schematic PDF">
@@ -253,26 +308,79 @@
     <main class="main">
       <div class="topbar">
         <button class="hamburger" id="hamburger">☰</button>
-        <div class="title">Viewing: <b id="currentLabel">Board Images</b></div>
+        <div class="title">Viewing: <b id="currentLabel">Board Overview</b></div>
       </div>
 
       <div class="viewerWrap">
-        <!-- Board images panel -->
-        <div id="boardImages" class="boardImages">
-          <figure>
-            <figcaption>Front</figcaption>
-            <img id="imgFront" alt="Board front" src="assets/image/front.png">
-          </figure>
-          <figure>
-            <figcaption>Layers</figcaption>
-            <img id="imgLayers" alt="Board layers" src="assets/image/Layers.PNG">
-          </figure>
+        <!-- BOARD (2x2 quadrants) -->
+        <div id="boardGrid" class="boardGrid">
+          <!-- Q1: Front image -->
+          <section class="card">
+            <div class="cardHeader">
+              <div class="label">Front</div>
+            </div>
+            <div class="cardBody">
+              <img alt="Board front" src="assets/image/front.png">
+            </div>
+          </section>
+
+          <!-- Q2: Layers image -->
+          <section class="card">
+            <div class="cardHeader">
+              <div class="label">Layers</div>
+            </div>
+            <div class="cardBody">
+              <img alt="Board layers" src="assets/image/Layers.PNG">
+            </div>
+          </section>
+
+          <!-- Q3: Embedded 3D model -->
+          <section class="card">
+            <div class="cardHeader">
+              <div class="label">3D Preview</div>
+              <div class="label" style="opacity:0.8">drag to rotate</div>
+            </div>
+            <div class="cardBody" style="padding:10px;">
+              <model-viewer
+                id="boardModel"
+                src="assets/models/pcbled_driver.glb"
+                camera-controls
+                interaction-prompt="none"
+                shadow-intensity="0"
+                environment-image="neutral"
+                exposure="1">
+              </model-viewer>
+            </div>
+          </section>
+
+          <!-- Q4: Downloads (dummy buttons for now) -->
+          <section class="card">
+            <div class="cardHeader">
+              <div class="label">Downloads</div>
+            </div>
+            <div class="cardBody">
+              <div class="dlWrap">
+                <button class="dlButton" type="button" id="btnGerbers">
+                  <span>Gerbers</span><span class="hint">ZIP</span>
+                </button>
+
+                <button class="dlButton" type="button" id="btnBomCpl">
+                  <span>BOM / CPL</span><span class="hint">CSV</span>
+                </button>
+
+                <div class="dlHint">
+                  These are currently dummy buttons. When you add the files (ex: <code>assets/downloads/gerbers.zip</code>),
+                  I’ll switch these to real download links.
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
         <!-- PDFs + BOM use this iframe -->
         <iframe id="docViewer" class="hidden" src=""></iframe>
 
-        <!-- 3D -->
+        <!-- Fullscreen 3D tab viewer -->
         <model-viewer
           id="glbViewer"
           class="hidden"
@@ -295,38 +403,43 @@
   <script>
     const nav = document.getElementById('nav');
 
-    const boardImages = document.getElementById('boardImages');
+    const boardGrid = document.getElementById('boardGrid');
     const docViewer = document.getElementById('docViewer'); // PDFs + BOM
-    const glbViewer = document.getElementById('glbViewer'); // 3D
+    const glbViewer = document.getElementById('glbViewer'); // full 3D tab
     const currentLabel = document.getElementById('currentLabel');
 
     const sidebar = document.getElementById('sidebar');
     const hamburger = document.getElementById('hamburger');
     const scrim = document.getElementById('scrim');
 
+    // Dummy download buttons
+    document.getElementById('btnGerbers').addEventListener('click', () => {
+      alert("Gerbers download not linked yet. Add a ZIP to your repo and I’ll wire this up.");
+    });
+    document.getElementById('btnBomCpl').addEventListener('click', () => {
+      alert("BOM/CPL download not linked yet. Add the files to your repo and I’ll wire this up.");
+    });
+
     // Only needed for BOM. PDFs render better without sandbox in many browsers.
     const BOM_SANDBOX = "allow-scripts allow-same-origin allow-downloads allow-forms allow-popups";
 
     function hideAllViewers(){
-      boardImages.classList.add('hidden');
+      boardGrid.classList.add('hidden');
       docViewer.classList.add('hidden');
       glbViewer.classList.add('hidden');
     }
 
-    function showBoardImages(){
+    function showBoard(){
       hideAllViewers();
-      boardImages.classList.remove('hidden');
+      boardGrid.classList.remove('hidden');
     }
 
     function showDoc(src, useSandbox){
       hideAllViewers();
       docViewer.classList.remove('hidden');
 
-      if (useSandbox) {
-        docViewer.setAttribute('sandbox', BOM_SANDBOX);
-      } else {
-        docViewer.removeAttribute('sandbox');
-      }
+      if (useSandbox) docViewer.setAttribute('sandbox', BOM_SANDBOX);
+      else docViewer.removeAttribute('sandbox');
 
       // Force reload reliably when toggling sandbox/src
       docViewer.src = "about:blank";
@@ -344,23 +457,16 @@
       const btn = e.target.closest('button');
       if (!btn) return;
 
-      // Active state
       [...nav.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const type = btn.dataset.type || 'pdf';
       const src = btn.dataset.src || "";
 
-      if (type === 'glb') {
-        showGLB(src);
-      } else if (type === 'bom') {
-        showDoc(src, true);
-      } else if (type === 'boardImages') {
-        showBoardImages();
-      } else {
-        // regular pdf/html docs
-        showDoc(src, false);
-      }
+      if (type === 'board') showBoard();
+      else if (type === 'glb') showGLB(src);
+      else if (type === 'bom') showDoc(src, true);
+      else showDoc(src, false); // pdf/html docs
 
       currentLabel.textContent = btn.dataset.label || 'Viewer';
 
