@@ -147,6 +147,41 @@
       background: #0b0f14;
     }
 
+    /* Board images viewer */
+    .boardImages{
+      width:100%;
+      height:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: #0b0f14;
+      padding:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      overflow:auto;
+    }
+    .boardImages figure{
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      gap:8px;
+    }
+    .boardImages figcaption{
+      font-size:12px;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+    .boardImages img{
+      width:100%;
+      height:auto;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#111;
+      display:block;
+      object-fit:contain;
+    }
+
     .hidden{ display:none !important; }
 
     @media (max-width: 900px){
@@ -172,6 +207,11 @@
       }
       .scrim.show{ display:block; }
       .viewerWrap{ padding:10px; }
+
+      /* stack images on mobile */
+      .boardImages{
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -182,12 +222,13 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <h1>Power Regulator</h1>
-        <p>Project viewer (PDF + 3D + iBOM)</p>
+        <p>Project viewer (Images + PDF + 3D + iBOM)</p>
       </div>
 
       <nav class="nav" id="nav">
-        <button class="active" data-type="pdf" data-src="assets/pdf/Board.pdf" data-label="Board PDF">
-          <span>Board</span><span class="hint">PDF</span>
+        <!-- Board now shows 2 images -->
+        <button class="active" data-type="boardImages" data-label="Board Images">
+          <span>Board</span><span class="hint">IMG</span>
         </button>
 
         <button data-type="pdf" data-src="assets/pdf/Schematic.pdf" data-label="Schematic PDF">
@@ -212,12 +253,24 @@
     <main class="main">
       <div class="topbar">
         <button class="hamburger" id="hamburger">☰</button>
-        <div class="title">Viewing: <b id="currentLabel">Board PDF</b></div>
+        <div class="title">Viewing: <b id="currentLabel">Board Images</b></div>
       </div>
 
       <div class="viewerWrap">
-        <!-- PDFs + BOM use this same iframe -->
-        <iframe id="docViewer" src="assets/pdf/Board.pdf"></iframe>
+        <!-- Board images panel -->
+        <div id="boardImages" class="boardImages">
+          <figure>
+            <figcaption>Front</figcaption>
+            <img id="imgFront" alt="Board front" src="assets/image/front.png">
+          </figure>
+          <figure>
+            <figcaption>Layers</figcaption>
+            <img id="imgLayers" alt="Board layers" src="assets/image/Layers.PNG">
+          </figure>
+        </div>
+
+        <!-- PDFs + BOM use this iframe -->
+        <iframe id="docViewer" class="hidden" src=""></iframe>
 
         <!-- 3D -->
         <model-viewer
@@ -242,6 +295,7 @@
   <script>
     const nav = document.getElementById('nav');
 
+    const boardImages = document.getElementById('boardImages');
     const docViewer = document.getElementById('docViewer'); // PDFs + BOM
     const glbViewer = document.getElementById('glbViewer'); // 3D
     const currentLabel = document.getElementById('currentLabel');
@@ -253,8 +307,19 @@
     // Only needed for BOM. PDFs render better without sandbox in many browsers.
     const BOM_SANDBOX = "allow-scripts allow-same-origin allow-downloads allow-forms allow-popups";
 
-    function showDoc(src, useSandbox){
+    function hideAllViewers(){
+      boardImages.classList.add('hidden');
+      docViewer.classList.add('hidden');
       glbViewer.classList.add('hidden');
+    }
+
+    function showBoardImages(){
+      hideAllViewers();
+      boardImages.classList.remove('hidden');
+    }
+
+    function showDoc(src, useSandbox){
+      hideAllViewers();
       docViewer.classList.remove('hidden');
 
       if (useSandbox) {
@@ -269,32 +334,37 @@
     }
 
     function showGLB(src){
-      docViewer.classList.add('hidden');
+      hideAllViewers();
       glbViewer.classList.remove('hidden');
       glbViewer.src = src;
     }
 
     // Navigation clicks
     nav.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-src]');
+      const btn = e.target.closest('button');
       if (!btn) return;
 
+      // Active state
       [...nav.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const type = btn.dataset.type || 'pdf';
-      const src = btn.dataset.src;
+      const src = btn.dataset.src || "";
 
       if (type === 'glb') {
         showGLB(src);
       } else if (type === 'bom') {
-        showDoc(src, true);   // BOM needs scripts -> sandbox enabled
+        showDoc(src, true);
+      } else if (type === 'boardImages') {
+        showBoardImages();
       } else {
-        showDoc(src, false);  // PDFs -> no sandbox
+        // regular pdf/html docs
+        showDoc(src, false);
       }
 
       currentLabel.textContent = btn.dataset.label || 'Viewer';
 
+      // Close sidebar on mobile
       sidebar.classList.remove('open');
       scrim.classList.remove('show');
     });
