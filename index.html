@@ -215,14 +215,18 @@
         <!-- PDF -->
         <iframe id="pdfViewer" src="assets/pdf/Board.pdf"></iframe>
 
-        <!-- 3D -->
+        <!-- 3D (no auto-rotate; performance-friendly settings) -->
         <model-viewer
           id="glbViewer"
           class="hidden"
           src=""
           camera-controls
-          auto-rotate
-          shadow-intensity="1">
+          interaction-prompt="none"
+          loading="eager"
+          reveal="auto"
+          shadow-intensity="0"
+          environment-image="neutral"
+          exposure="1">
         </model-viewer>
       </div>
     </main>
